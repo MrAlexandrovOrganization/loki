@@ -1,7 +1,7 @@
 networks:
-  monitoring-net:
+  loki-net:
     external: true
-    name: monitoring-net
+    name: loki-net
 
 services:
   loki:
@@ -21,7 +21,7 @@ services:
       retries: 5
       start_period: 20s
     networks:
-      - monitoring-net
+      - loki-net
     extends:
       file: docker-compose.base.yml
       service: base
