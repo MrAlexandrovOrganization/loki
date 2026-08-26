@@ -1,0 +1,57 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    name: Validate configs
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate docker-compose
+        run: docker compose config -q
+      - name: Validate Loki config
+        run: |
+          docker run --rm \
+            -v "$PWD/loki.yaml:/etc/loki/local-config.yaml:ro" \
+            grafana/loki:3.4.2 \
+            -config.file=/etc/loki/local-config.yaml -verify-config
+
+  deploy:
+    name: Deploy to VM
+    runs-on: ubuntu-24.04
+    needs: validate
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            cd ${{ secrets.VM_PROJECT_PATH }}
+            git pull
+            make up
+
+      - name: Smoke test Loki
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.VM_SSH_KEY }}
+          script: |
+            for i in $(seq 1 12); do
+              if curl -fsS http://127.0.0.1:3100/ready | grep -q ready; then
+                echo "Loki is ready"
+                exit 0
+              fi
+              echo "waiting for Loki ($i/12)..."
+              sleep 5
+            done
+            echo "Loki did not become ready"
+            exit 1
