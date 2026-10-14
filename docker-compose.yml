@@ -5,7 +5,7 @@ networks:
 
 services:
   loki:
-    image: grafana/loki:3.4.2
+    image: grafana/loki:${LOKI_VERSION:?Run via make}
     restart: unless-stopped
     command:
       - '--config.file=/etc/loki/local-config.yaml'

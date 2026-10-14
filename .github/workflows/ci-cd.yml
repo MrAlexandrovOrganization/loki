@@ -12,20 +12,14 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Validate docker-compose
-        run: docker compose config -q
-      - name: Validate Loki config
-        run: |
-          docker run --rm \
-            -v "$PWD/loki.yaml:/etc/loki/local-config.yaml:ro" \
-            grafana/loki:3.4.2 \
-            -config.file=/etc/loki/local-config.yaml -verify-config
+      - name: Validate configuration
+        run: make check
 
   deploy:
     name: Deploy to VM
     runs-on: ubuntu-24.04
     needs: validate
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.DEPLOY_ENABLED == 'true'
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
