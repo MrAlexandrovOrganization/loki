@@ -34,4 +34,6 @@ config-check:
 	$(DOCKER) run --rm --network none --entrypoint sh -i grafana/loki:$(LOKI_VERSION) -c 'cat > /tmp/loki.yaml; /usr/bin/loki -config.file=/tmp/loki.yaml -verify-config' < loki.yaml
 
 .PHONY: check
-check: config-check
+check: config-check test
+
+include makefiles/ci-deploy.mk

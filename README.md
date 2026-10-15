@@ -19,5 +19,18 @@ Compactor удаляет более старые данные асинхронн
 
 После переноса на WSL порт 3100 остаётся на loopback и доступен агентам через
 Tailscale Serve. Сохраняется весь named volume, скопированный после остановки
-старого Loki. Автодеплой на прежний server отключён по умолчанию: repository
-variable `DEPLOY_ENABLED` включается только после настройки правильного target.
+старого Loki.
+
+## Автодеплой
+
+После проверок push в `main` доставляет точный проверенный SHA на WSL через
+SSH jump host Hostkey Russia. `make ci-deploy` запускает транспорт; `make deploy`
+пересоздаёт сервис и выполняет `make smoke`. PR только проверяются. Ручной запуск
+workflow доступен для main. `DEPLOY_ENABLED` управляет включением доставки.
+Ключ репозитория ограничен этим проектом; `DEPLOY_SSH_KEY` хранится в Secrets,
+проверенные SSH host keys — в переменной `DEPLOY_KNOWN_HOSTS`. Старые `VM_*`
+secrets не используются. `.env` и named volumes остаются на хосте.
+
+Доступ/установка receiver, блокировки, отказы и повторный запуск описаны в
+[инструкции доставки Alloy](https://github.com/MrAlexandrovOrganization/alloy/blob/main/DEPLOY.md).
+Для тестов использовать `make test`; `make check` также валидирует конфигурацию.
