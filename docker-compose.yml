@@ -5,6 +5,7 @@ networks:
 
 services:
   loki:
+    container_name: "${CONTAINER_NAME_PREFIX:-}loki"
     image: grafana/loki:${LOKI_VERSION:?Run via make}
     restart: unless-stopped
     command:
